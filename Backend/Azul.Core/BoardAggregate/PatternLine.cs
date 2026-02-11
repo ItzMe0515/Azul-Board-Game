@@ -27,13 +27,17 @@ internal class PatternLine : IPatternLine
 
     public void TryAddTiles(TileType type, int numberOfTilesToAdd, out int remainingNumberOfTiles)
     {
-        if (IsComplete || (TileType != null && TileType != type))
+        if (IsComplete)
         {
-            remainingNumberOfTiles = numberOfTilesToAdd;
-            return;
+            throw new InvalidOperationException("Pattern line is already complete.");
         }
 
-        if(TileType == null)
+        if (TileType != null && TileType != type)
+        {
+            throw new InvalidOperationException("Pattern line already contains tiles of another type.");
+        }
+
+        if (TileType == null)
         {
             TileType = type;
         }

@@ -11,4 +11,7 @@ public interface IFactoryDisplay
     public void AddTiles(IReadOnlyList<TileType> tilesToAdd);
 
     public IReadOnlyList<TileType> TakeTiles(TileType tileType);
+
+    void ClearTiles();
+    void RemoveTiles(TileType tileType);
 }

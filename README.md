@@ -1,2 +1,2 @@
 # Azul
-A self-hosted online version of the Azul Board Game
+Startcode voor het 1TIN project 2025: Azul

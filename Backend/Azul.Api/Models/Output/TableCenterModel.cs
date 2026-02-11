@@ -13,7 +13,7 @@ public class TableCenterModelMappingProfile : Profile
     {
         CreateMap<ITableCenter, TableCenterModel>()
             .IncludeBase<IFactoryDisplay, FactoryDisplayModel>()
-            .ForMember(dest => dest.Tiles, opt => opt.MapFrom(src => src.Tiles.Select(t => t.ToString()).ToList()));
+            .ForMember(dest => dest.Tiles, opt => opt.MapFrom(src => src.Tiles.Select(t => (int)t).ToList()));
     }
 }
 

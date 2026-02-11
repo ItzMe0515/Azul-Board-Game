@@ -46,59 +46,82 @@ internal class Game : IGame
 
 
         foreach (var player in Players)
+        {
             player.HasStartingTile = false;
+        }
 
-        TileFactory.TableCenter.AddStartingTile();
+        TileFactory.TableCenter.AddStartingTile();  
 
         TileFactory.FillDisplays();
     }
 
     public void TakeTilesFromFactory(Guid playerId, Guid displayId, TileType tileType)
     {
-        // Zoek de speler
+        if (playerId != PlayerToPlayId)
+            throw new InvalidOperationException("It's not your turn.");
+
         var player = Players.FirstOrDefault(p => p.Id == playerId);
         if (player == null) throw new InvalidOperationException("Player not found.");
 
-        // Neem de tegels uit de factory display of het midden
-        var display = TileFactory.Displays.FirstOrDefault(d => d.Id == displayId)
-                      ?? (TileFactory.TableCenter.Id == displayId ? TileFactory.TableCenter : null);
-        if (display == null) throw new InvalidOperationException("Display not found.");
+        if (player.TilesToPlace.Count > 0)
+            throw new InvalidOperationException("You must place your tiles before taking new ones.");
 
-        var takenTiles = display.TakeTiles(tileType);
+        // DELEGATE TO TILEFACTORY (not display)
+        var takenTiles = TileFactory.TakeTiles(displayId, tileType);
         if (takenTiles == null || takenTiles.Count == 0)
             throw new InvalidOperationException("No tiles taken.");
 
-        // Voeg de tegels toe aan de hand van de speler
         player.TilesToPlace.Clear();
         player.TilesToPlace.AddRange(takenTiles);
 
-        // Zet de starting tile als deze is genomen uit het midden
-        if (display == TileFactory.TableCenter && TileFactory.TableCenter.HasStartingTile)
+        // If the player took the starting tile, set flag
+        if (takenTiles.Contains(TileType.StartingTile))
         {
             player.HasStartingTile = true;
-            TileFactory.TableCenter.RemoveStartingTile();
         }
     }
 
+
     public void PlaceTilesOnPatternLine(Guid playerId, int patternLineIndex)
     {
+        if (playerId != PlayerToPlayId)
+            throw new InvalidOperationException("It's not your turn.");
+
         var player = Players.FirstOrDefault(p => p.Id == playerId);
         if (player == null) throw new InvalidOperationException("Player not found.");
 
-        // TODO: Implementeer patroonlijn-logica
+        if (player.TilesToPlace.Count == 0)
+            throw new InvalidOperationException("Player has no tiles to place.");
+
+        // Place tiles on the pattern line (handles overflow to floorline, etc.)
+        player.Board.AddTilesToPatternLine(player.TilesToPlace, patternLineIndex, TileFactory);
+
         player.TilesToPlace.Clear();
         NextTurn();
+
+        CheckEndOfRoundAndHandle();
     }
+
 
     public void PlaceTilesOnFloorLine(Guid playerId)
     {
+        if (playerId != PlayerToPlayId)
+            throw new InvalidOperationException("It's not your turn.");
+
         var player = Players.FirstOrDefault(p => p.Id == playerId);
         if (player == null) throw new InvalidOperationException("Player not found.");
 
-        // TODO: Implementeer vloer-logica
+        if (player.TilesToPlace.Count == 0)
+            throw new InvalidOperationException("Player has no tiles to place.");
+
+        player.Board.AddTilesToFloorLine(player.TilesToPlace, TileFactory);
+
         player.TilesToPlace.Clear();
         NextTurn();
+
+        CheckEndOfRoundAndHandle();
     }
+
 
     private void NextTurn()
     {
@@ -106,7 +129,48 @@ internal class Game : IGame
         int idx = Array.FindIndex(Players, p => p.Id == PlayerToPlayId);
         int nextIdx = (idx + 1) % Players.Length;
         PlayerToPlayId = Players[nextIdx].Id;
+    }
 
-        // TODO: Controleer of ronde of spel is afgelopen (HasEnded)
+    private void CheckEndOfRoundAndHandle()
+    {
+        bool allTilesPlaced = Players.All(p => p.TilesToPlace.Count == 0);
+        if (TileFactory.IsEmpty && allTilesPlaced)
+        {
+            foreach (var player in Players)
+            {
+                player.Board.DoWallTiling(TileFactory);
+            }
+
+            if (Players.Any(p => p.Board.HasCompletedHorizontalLine))
+            {
+                HasEnded = true;
+                foreach (var player in Players)
+                {
+                    player.Board.CalculateFinalBonusScores();
+                }
+            }
+            else
+            {
+                RoundNumber++;
+
+                // Determine starter for next round BEFORE clearing HasStartingTile
+                var starter = Players.FirstOrDefault(p => p.HasStartingTile);
+
+                // Clear HasStartingTile for all players
+                foreach (var player in Players)
+                {
+                    player.HasStartingTile = false;
+                }
+
+                // Fill displays first
+                TileFactory.FillDisplays();
+
+                // Now add the starting tile to the table center
+                TileFactory.TableCenter.AddStartingTile();
+
+                // Set the player to play
+                PlayerToPlayId = starter?.Id ?? Players[0].Id;
+            }
+        }
     }
 }

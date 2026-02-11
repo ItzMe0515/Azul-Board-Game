@@ -14,7 +14,7 @@ public class PlayerModel
     public DateOnly? LastVisitToPortugal { get; set; }
     public BoardModel Board { get; set; }
     public bool HasStartingTile { get; set; }
-    public List<string> TilesToPlace { get; set; }
+    public List<TileType> TilesToPlace { get; set; }
 }
 
 public class PlayerModelMappingProfile : Profile

@@ -25,7 +25,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     let backend_error = document.getElementById('error_backend');
     backend_error.textContent = '';
 
-    // --- Error Handling Helper ---
+    //Error Handling Helper
     function showBackend_error(message) {
         if (backend_error) {
             if (message) {
@@ -70,20 +70,6 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
                 return;
             }
         }
-
-        // if (!response.ok) {
-        //     // Check if the backend indicates the user does not exist
-        //     if (result.message && result.message.toLowerCase().includes("user not found")) {
-        //         showBackend_error("This email is not registered. Redirecting you to registration...");
-        //         // Save the email to sessionStorage for pre-filling
-        //         sessionStorage.setItem('unregisteredEmail', email);
-        //         // Redirect after a short delay (e.g., 2 seconds)
-        //         setTimeout(function() {
-        //             window.location.href = 'register.html';
-        //         }, 2000);
-        //     } else {
-        //         showBackend_error(result.message || 'Incorrect email or password! Try again!');
-        //     }
         if (!response.ok) {
             //Show error message of backend
             showBackend_error(result.message || 'Incorrect email or password! Try again!');
@@ -93,7 +79,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             //Store token in localStorage
             localStorage.setItem('authToken', result.token);
 
-            //Optional: Store user information when they get send back
+            //Store user information when they get send back
             if (result.user) {
                 localStorage.setItem('currentUser', JSON.stringify(result.user));
             }

@@ -6,17 +6,104 @@
     <link rel="stylesheet" href="assets/css/game.css">
 </head>
 <body>
-<div class="azul-bg"></div>
-<div id="game-root">
     <header>
-        <h1>Azul Online</h1>
         <div id="game-info">
-            <span id="game-id"></span>
             <span id="round-info"></span>
-            <span id="turn-indicator"></span>
         </div>
+
     </header>
+    <!-- Music Sidebar Toggle Button -->
+    <button id="music-toggle" aria-label="Open music menu" class="azul-music-toggle">🎵</button>
+
+    <!-- Music Sidebar Menu -->
+    <aside id="music-menu" class="azul-music-menu">
+        <button id="close-music-menu" aria-label="Close music menu">&times;</button>
+        <h2>Music</h2>
+        <audio id="bg-music" preload="auto"></audio>
+        <div class="music-controls">
+            <button id="play-btn" class="music-icon-btn" aria-label="Play">
+                <!-- Play SVG -->
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="6 4 20 12 6 20 6 4"></polygon>
+                </svg>
+            </button>
+            <button id="pause-btn" class="music-icon-btn" aria-label="Pause">
+                <!-- Pause SVG -->
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="6" y="4" width="4" height="16"></rect>
+                    <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+            </button>
+            <button id="prev-btn" class="music-icon-btn" aria-label="Previous">
+                <!-- Previous SVG -->
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                    <line x1="5" y1="19" x2="5" y2="5"></line>
+                </svg>
+            </button>
+            <button id="next-btn" class="music-icon-btn" aria-label="Next">
+                <!-- Next SVG -->
+                <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                    <line x1="19" y1="5" x2="19" y2="19"></line>
+                </svg>
+            </button>
+        </div>
+
+        <span id="track-title"></span>
+    </aside>
+    <!-- Rules Sidebar Toggle Button -->
+    <button id="rules-toggle" aria-label="Open rules menu" class="azul-rules-toggle">📖</button>
+
+    <!-- Rules Sidebar Menu -->
+    <aside id="rules-menu" class="azul-rules-menu">
+        <button id="close-rules-menu" aria-label="Close rules menu">&times;</button>
+        <h2>Game Rules</h2>
+        <div class="rules-content">
+            <h3>How to Play Azul (Online Version)</h3>
+            <ol>
+                <li>
+                    <b>Take Tiles:</b>
+                    On your turn, click on a tile color in any factory or in the center.<br>
+                    All tiles of that color from the chosen factory or the center will be selected for you.<br>
+                    The remaining tiles from a factory automatically move to the center.
+                </li>
+                <li>
+                    <b>Place Tiles:</b>
+                    After taking tiles, the program will show your available pattern lines and floor line.<br>
+                    Click on the pattern line or the floor line where you want to place your tiles.<br>
+                    Each pattern line can only hold one color at a time.<br>
+                    If you cannot fit all your tiles, the extras go to the floor line and will cost you points.
+                </li>
+                <li>
+                    <b>End of Round:</b>
+                    When all tiles have been taken, the program automatically moves completed pattern lines to your wall and calculates your score.<br>
+                    Any tiles left on the floor line subtract points.
+                </li>
+                <li>
+                    <b>Next Round:</b>
+                    The factories are refilled and play continues.<br>
+                    The player who took the start token goes first in the next round.
+                </li>
+                <li>
+                    <b>Game End:</b>
+                    The game ends when any player completes a full horizontal row on their wall.<br>
+                    Bonus points are awarded for completed rows, columns, and colors.<br>
+                    The player with the highest score wins!
+                </li>
+            </ol>
+            <p>
+                <b>Tips:</b><br>
+                Try to complete rows and columns for bonus points.<br>
+                Avoid filling your floor line to keep your score high!
+            </p>
+        </div>
+
+    </aside>
+
+
     <main>
+        <div id="main-content">
         <section id="factory-area">
             <div id="factory-circle">
                 <!-- Factories and center will be rendered here -->
@@ -25,12 +112,27 @@
         <section id="boards-section">
             <div id="boards"></div>
         </section>
+        </div>
     </main>
     <footer>
         <button id="leave-game">Leave Game</button>
     </footer>
-</div>
-<div id="notification"></div>
+    <!-- Winner Modal -->
+    <div id="winnerModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <h2>Spel afgelopen!</h2>
+            <div id="winnerSummary"></div>
+            <!-- Scoreboard and round info -->
+            <div id="scoreboard"></div>
+            <button id="returnToLobbyBtn">Terug naar lobby</button>
+        </div>
+    </div>
+
+
+
+
+
+    <div id="notification"></div>
 <script src="js/game.js"></script>
 </body>
 </html>

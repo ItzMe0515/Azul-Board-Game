@@ -19,8 +19,6 @@ internal class TileFactory : ITileFactory
         {
             _displays.Add(new FactoryDisplay(_tableCenter));
         }
-
-        //_tableCenter.AddStartingTile();
     }
 
     public ITileBag Bag => _bag;
@@ -35,11 +33,11 @@ internal class TileFactory : ITileFactory
     {
         get
         {
-            if (_bag.Tiles.Count > 0)
+            if (_displays.Any(d => !d.IsEmpty))
             {
                 return false;
             }
-            if (_displays.Any(d => !d.IsEmpty))
+            if (!_tableCenter.IsEmpty)
             {
                 return false;
             }
@@ -65,7 +63,7 @@ internal class TileFactory : ITileFactory
                     _bag.AddTiles(_usedTiles);
                     _usedTiles.Clear();
 
-                    // Only take the missing amount!
+                    // Only take the missing amount
                     if (_bag.TryTakeTiles(missing, out var refillTiles) && refillTiles.Count > 0)
                     {
                         currentTiles.AddRange(refillTiles);
@@ -83,22 +81,65 @@ internal class TileFactory : ITileFactory
 
     public IReadOnlyList<TileType> TakeTiles(Guid displayId, TileType tileType)
     {
-        var display = _displays.FirstOrDefault(d => d.Id == displayId);
+        // 1. Find the display or table center
+        IFactoryDisplay display = _displays.FirstOrDefault(d => d.Id == displayId);
         if (display == null)
         {
-            return Array.Empty<TileType>();
-        }
-
-        var taken = display.TakeTiles(tileType);
-        foreach (var t in display.Tiles)
-        {
-            if (t != tileType)
+            if (_tableCenter.Id == displayId)
             {
-                _tableCenter.AddTiles(new List<TileType> { t });
+                display = _tableCenter;
+            }
+            else
+            {
+                throw new InvalidOperationException("Display does not exist.");
             }
         }
-        return taken;
+
+        // 2. Check if the tileType is present in the display/table center
+        if (!display.Tiles.Contains(tileType))
+        {
+            throw new InvalidOperationException("The requested tile is not in the display.");
+        }
+
+        // 3. If taking from table center: take all of that type + starting tile (if present)
+        if (display == _tableCenter)
+        {
+            var takenTiles = display.Tiles.Where(t => t == tileType).ToList();
+
+            // Only add the starting tile if it is present AND the selected type is NOT StartingTile
+            if (_tableCenter.HasStartingTile)
+            {
+                if (tileType != TileType.StartingTile)
+                {
+                    takenTiles.Add(TileType.StartingTile);
+                }
+                _tableCenter.RemoveStartingTile(); // Remove the starting tile from center
+            }
+
+            display.RemoveTiles(tileType); // Remove all of the selected type
+
+            return takenTiles;
+        }
+        else
+        {
+            // 4. If taking from a factory display
+            var takenTiles = display.Tiles.Where(t => t == tileType).ToList();
+            var movedTiles = display.Tiles.Where(t => t != tileType).ToList();
+
+            // Move other tiles to the table center
+            if (movedTiles.Any())
+            {
+                _tableCenter.AddTiles(movedTiles);
+            }
+
+            // Remove all tiles from the display
+            display.ClearTiles();
+
+            return takenTiles;
+        }
     }
+
+
 
     public void AddToUsedTiles(TileType tile)
     {

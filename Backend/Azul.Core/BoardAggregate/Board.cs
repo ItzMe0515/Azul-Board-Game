@@ -72,46 +72,67 @@ internal class Board : IBoard
         }
 
         var patternLine = PatternLines[patternLineIndex];
-        TileType type = tilesToAdd[0];
+
+        // Separate out the starting tile(s)
+        var startingTiles = tilesToAdd.Where(t => t == TileType.StartingTile).ToList();
+        var normalTiles = tilesToAdd.Where(t => t != TileType.StartingTile).ToList();
+
+        // If only starting tiles, all go to floorline
+        if (normalTiles.Count == 0)
+        {
+            AddTilesToFloorLine(startingTiles, tileFactory);
+            return;
+        }
+
+        TileType type = normalTiles[0];
 
         int wallRow = patternLineIndex;
         for (int col = 0; col < 5; col++)
         {
             if (Wall[wallRow, col].HasTile && Wall[wallRow, col].Type == type)
             {
-                AddTilesToFloorLine(tilesToAdd, tileFactory);
-                return;
+                throw new InvalidOperationException("This color already exists in the wall row.");
             }
         }
 
         if (patternLine.TileType != null && patternLine.TileType != type)
         {
-            AddTilesToFloorLine(tilesToAdd, tileFactory);
-            return;
+            throw new InvalidOperationException("Pattern line already contains a different color.");
         }
 
-        patternLine.TryAddTiles(type, tilesToAdd.Count, out int remaining);
-        if (remaining > 0)
+        patternLine.TryAddTiles(type, normalTiles.Count, out int remaining);
+
+        // Place starting tile(s) first in overflow, then normal overflow
+        var overflow = new List<TileType>();
+        overflow.AddRange(startingTiles); // StartingTile(s) first!
+        overflow.AddRange(Enumerable.Repeat(type, remaining)); // Then overflow of normal tiles
+
+        if (overflow.Count > 0)
         {
-            AddTilesToFloorLine(Enumerable.Repeat(type, remaining).ToList(), tileFactory);
+            AddTilesToFloorLine(overflow, tileFactory);
         }
     }
+
+
 
     public void AddTilesToFloorLine(IReadOnlyList<TileType> tilesToAdd, ITileFactory tileFactory)
     {
-        int i = 0;
-        for (; i < FloorLine.Length && i < tilesToAdd.Count; i++)
+        int placed = 0;
+        for (int i = 0; i < FloorLine.Length && placed < tilesToAdd.Count; i++)
         {
             if (!FloorLine[i].HasTile)
             {
-                FloorLine[i].PlaceTile(tilesToAdd[i]);
+                FloorLine[i].PlaceTile(tilesToAdd[placed]);
+                placed++;
             }
         }
-        for (; i < tilesToAdd.Count; i++)
+        // All remaining tiles (if any) go to used tiles
+        for (; placed < tilesToAdd.Count; placed++)
         {
-            tileFactory.AddToUsedTiles(tilesToAdd[i]);
+            tileFactory.AddToUsedTiles(tilesToAdd[placed]);
         }
     }
+
 
     public void DoWallTiling(ITileFactory tileFactory)
     {
@@ -135,30 +156,36 @@ internal class Board : IBoard
                     Score += CalculateWallScore(row, col);
                 }
 
-                for (int i = 0; i > pl.Length - 1; i++)
+                for (int i = 0; i < pl.Length - 1; i++)
                 {
                     tileFactory.AddToUsedTiles(pl.TileType.Value);
                 }
-            }
                 pl.Clear();
             }
+        }
 
-            int[] floorLinePenalty = { -1, -1, -2, -2, -2, -3, -3 };
 
-            for (int i = 0; i < FloorLine.Length; i++)
+        int[] floorLinePenalty = { -1, -1, -2, -2, -2, -3, -3 };
+
+        for (int i = 0; i < FloorLine.Length; i++)
+        {
+            if (FloorLine[i].HasTile)
             {
-                if (FloorLine[i].HasTile)
+                Score += floorLinePenalty[i];
+                if (FloorLine[i].Type.Value != TileType.StartingTile)
                 {
-                    Score += floorLinePenalty[i];
                     tileFactory.AddToUsedTiles(FloorLine[i].Type.Value);
-                    FloorLine[i].Clear();
                 }
+                FloorLine[i].Clear();
             }
-            if (Score < 0)
-            {
-                Score = 0;
-            }
+        }
+
+        if (Score < 0)
+        {
+            Score = 0;
+        }
     }
+
     private int CalculateWallScore(int row, int col)
     {
         int total = 1;

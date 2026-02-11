@@ -27,20 +27,25 @@ public class TileSpot
 
     public void PlaceTile(TileType type)
     {
+        if (HasTile)
+        {
+            throw new InvalidOperationException("Tile already placed.");
+        }
+
         if (Type != null && Type != type)
         {
             throw new InvalidOperationException("Cannot place this tile type on this spot.");
-            Type = type;
-            HasTile = true;
         }
+
+        Type = type;
+        HasTile = true;
     }
+
 
     public void Clear()
     {
-        if (Type == null)
-        {
-            Type = null;
-        }
+        Type = null;
         HasTile = false;
     }
+
 }

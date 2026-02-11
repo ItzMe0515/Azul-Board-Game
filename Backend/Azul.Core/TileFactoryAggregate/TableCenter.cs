@@ -22,9 +22,9 @@ internal class TableCenter : ITableCenter
         _hasStartingTile = true;
     }
 
-
     public void RemoveStartingTile()
     {
+        _tiles.RemoveAll(t => t == TileType.StartingTile);
         _hasStartingTile = false;
     }
 
@@ -41,4 +41,15 @@ internal class TableCenter : ITableCenter
     }
 
     public bool IsEmpty => _tiles.Count == 0;
+
+    public void ClearTiles()
+    {
+        _tiles.Clear();
+    }
+
+    public void RemoveTiles(TileType tileType)
+    {
+        _tiles.RemoveAll(t => t == tileType);
+    }
+
 }

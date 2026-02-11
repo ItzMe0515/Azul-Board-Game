@@ -40,4 +40,15 @@ internal class FactoryDisplay : IFactoryDisplay
 
         return taken;
     }
+
+    public void ClearTiles()
+    {
+        _tiles.Clear();
+    }
+
+    public void RemoveTiles(TileType tileType)
+    {
+        _tiles.RemoveAll(t => t == tileType);
+    }
+
 }

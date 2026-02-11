@@ -47,7 +47,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
         }
     }
 
-    // --- Validation Flag ---
+    // Validation Flag
     let hasError = false;
 
     //Check for empty fields
