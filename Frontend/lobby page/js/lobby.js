@@ -1,6 +1,6 @@
 'use strict';
 
-const API_BASE = 'https://localhost:5051/api';
+const API_BASE = '/api';
 let selectedPlayerCount = null;
 let currentTableId = null;
 let pollingInterval = null;

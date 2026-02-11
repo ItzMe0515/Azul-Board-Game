@@ -20,7 +20,7 @@ const TILE_IMAGES = {
 let selectedFactoryId = null;
 let selectedTileType = null;
 
-const API_BASE = 'https://localhost:5051/api';
+const API_BASE = '/api';
 
 const urlParams = new URLSearchParams(window.location.search);
 let gameId = urlParams.get('gameId');

@@ -47,7 +47,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     }
 
     try {
-        let response = await fetch('https://localhost:5051/api/Authentication/token', {
+        let response = await fetch('/api/Authentication/token', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

@@ -96,7 +96,7 @@ document.getElementById('registerForm').addEventListener('submit', async functio
 
     //Sending information to backend
     try {
-        let response = await fetch('https://localhost:5051/api/Authentication/register', {
+        let response = await fetch('/api/Authentication/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

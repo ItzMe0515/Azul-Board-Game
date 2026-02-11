@@ -13,6 +13,7 @@ using Azul.Api.Util;
 using Azul.Bootstrapper;
 using Azul.Core.BoardAggregate;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Azul.Api
@@ -43,6 +44,17 @@ namespace Azul.Api
 
             builder.Services.AddCors(options =>
             {
+                var allowedOrigins = builder.Configuration.GetValue<string>("AllowedOrigins")?.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                    ?? new[] { "https://azul.eliminatrix.net" };
+
+                options.AddPolicy("Production",
+                    policyBuilder => policyBuilder
+                        .WithOrigins(allowedOrigins)
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials());
+
+                // Keep AllowAll for development
                 options.AddPolicy("AllowAll",
                     policyBuilder => policyBuilder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
             });
@@ -122,6 +134,13 @@ namespace Azul.Api
             //////////////////////////////////////////////
 
             var app = builder.Build();
+
+            // Configure forwarded headers for reverse proxy
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
+
             app.EnsureDatabaseIsCreated();
 
             ////////////////////////
@@ -134,7 +153,8 @@ namespace Azul.Api
                 app.UseSwaggerUI();
             }
 
-            app.UseCors(policyName: "AllowAll");
+            // Use restrictive CORS in production, permissive in development
+            app.UseCors(policyName: app.Environment.IsDevelopment() ? "AllowAll" : "Production");
 
             app.UseHttpsRedirection();
 

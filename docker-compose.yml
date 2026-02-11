@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: azul-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./Frontend:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+    networks:
+      - azul-network
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./Backend
+      dockerfile: Azul.Api/Dockerfile
+    container_name: azul-api
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__AzulDbConnection=Data Source=sqldata;Database=AzulDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;
+      - Token__Key=${JWT_SECRET_KEY}
+      - Token__Issuer=Azul.Api
+      - Token__Audience=Azul.Api
+      - Token__ExpirationTimeInMinutes=60
+      - AllowedOrigins=${ALLOWED_ORIGINS}
+    expose:
+      - "8080"
+    depends_on:
+      sqldata:
+        condition: service_healthy
+    networks:
+      - azul-network
+    restart: unless-stopped
+
+  sqldata:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: azul-sqldata
+    environment:
+      - SA_PASSWORD=${SA_PASSWORD}
+      - ACCEPT_EULA=Y
+      - MSSQL_PID=Express
+    volumes:
+      - azul-sqldata:/var/opt/mssql
+    networks:
+      - azul-network
+    restart: unless-stopped
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$${SA_PASSWORD}" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+networks:
+  azul-network:
+    driver: bridge
+
+volumes:
+  azul-sqldata:
